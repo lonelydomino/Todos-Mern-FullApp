@@ -1,11 +1,12 @@
-import './App.css'
-import { BrowserRouter as Router, Route, Switch } from 'react-router-dom'
+import "./App.css";
+import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 
-import Users from './user/pages/Users'
-import { Redirect } from 'react-router-dom/cjs/react-router-dom.min'
-import NewPlace from './places/pages/NewPlace'
-import MainNavigation from './shared/components/Navigation/MainNavigation'
-import UserPlaces from './places/pages/UserPlaces'
+import Users from "./user/pages/Users";
+import { Redirect } from "react-router-dom/cjs/react-router-dom.min";
+import NewPlace from "./places/pages/NewPlace";
+import MainNavigation from "./shared/components/Navigation/MainNavigation";
+import UserPlaces from "./places/pages/UserPlaces";
+import UpdatePlace from "./places/pages/UpdatePlace";
 function App() {
   return (
     <Router>
@@ -15,15 +16,20 @@ function App() {
           <Route path="/" exact>
             <Users />
           </Route>
-          <Route path='/:userId/places' exact><UserPlaces /></Route>
+          <Route path="/:userId/places" exact>
+            <UserPlaces />
+          </Route>
           <Route path="/places/new" exact>
             <NewPlace />
+          </Route>
+          <Route path="/places/:placeId">
+            <UpdatePlace />
           </Route>
           <Redirect to="/" />
         </Switch>
       </main>
     </Router>
-  )
+  );
 }
 
-export default App
+export default App;
