@@ -56,6 +56,22 @@ app.get("/todo/complete/:id", async (req, res) => {
   todo.save();
   res.json(todo);
 });
+// Serve static files from React app in production (optional - for combined deployment)
+if (process.env.NODE_ENV === "production") {
+  const path = require("path");
+  const fs = require("fs");
+  const buildPath = path.join(__dirname, "../client/build");
+
+  // Only serve static files if build folder exists (for combined deployment)
+  if (fs.existsSync(buildPath)) {
+    app.use(express.static(buildPath));
+
+    app.get("*", (req, res) => {
+      res.sendFile(path.join(buildPath, "index.html"));
+    });
+  }
+}
+
 app.listen(process.env.PORT || 3001, "0.0.0.0", () =>
-  console.log("Server started on port 3001.")
+  console.log(`Server started on port ${process.env.PORT || 3001}.`)
 );

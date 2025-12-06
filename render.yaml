@@ -1,0 +1,27 @@
+services:
+  # Backend API Service
+  - type: web
+    name: mern-todo-api
+    env: node
+    plan: free
+    buildCommand: cd api && npm install
+    startCommand: cd api && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false  # Set this in Render dashboard
+      - key: PORT
+        value: 10000
+    healthCheckPath: /todos
+
+  # Frontend Service (optional - can also deploy to Vercel/Netlify)
+  - type: web
+    name: mern-todo-client
+    env: static
+    buildCommand: cd client && npm install && npm run build
+    staticPublishPath: ./client/build
+    envVars:
+      - key: REACT_APP_API_URL
+        sync: false  # Set to your backend URL (e.g., https://mern-todo-api.onrender.com)
+
