@@ -8,7 +8,18 @@ const uri =
 const app = express();
 
 app.use(express.json());
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "https://todos-mern-client.vercel.app",
+      "http://localhost:3000",
+      "http://localhost:5173",
+    ],
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
 mongoose
   .connect(uri, {
