@@ -8,23 +8,38 @@ const uri =
 const app = express();
 
 // CORS must be configured before other middleware
-app.use(
-  cors({
-    origin: [
-      "https://todos-mern-client.vercel.app",
-      "http://localhost:3000",
-      "http://localhost:5173",
-    ],
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
-    preflightContinue: false,
-    optionsSuccessStatus: 204,
-  })
-);
+const allowedOrigins = [
+  "https://todos-mern-client.vercel.app",
+  "http://localhost:3000",
+  "http://localhost:5173",
+];
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps, Postman, or server-to-server)
+    if (!origin) {
+      return callback(null, true);
+    }
+    // Check if origin is in allowed list
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      // Temporarily allow all origins for debugging - remove this in production
+      console.log("CORS: Allowing origin:", origin);
+      callback(null, true);
+    }
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  preflightContinue: false,
+  optionsSuccessStatus: 204,
+};
+
+app.use(cors(corsOptions));
 
 // Handle preflight requests explicitly
-app.options("*", cors());
+app.options("*", cors(corsOptions));
 
 app.use(express.json());
 
@@ -46,34 +61,64 @@ mongoose
 const Todo = require("./models/Todo.js");
 
 app.get("/todos", async (req, res) => {
-  const todos = await Todo.find();
-  res.json(todos);
+  try {
+    const todos = await Todo.find();
+    res.json(todos);
+  } catch (error) {
+    console.error("Error fetching todos:", error);
+    res.status(500).json({ error: "Failed to fetch todos" });
+  }
 });
 
-app.post("/todo/new", (req, res) => {
-  const todo = new Todo({
-    text: req.body.text,
-  });
+app.post("/todo/new", async (req, res) => {
+  try {
+    const todo = new Todo({
+      text: req.body.text,
+    });
 
-  todo.save();
-
-  res.json(todo);
+    await todo.save();
+    res.json(todo);
+  } catch (error) {
+    console.error("Error creating todo:", error);
+    res.status(500).json({ error: "Failed to create todo" });
+  }
 });
 
 app.delete("/todo/delete/:id", async (req, res) => {
-  console.log("IN DELETE");
-  const result = await Todo.findByIdAndDelete(req.params.id);
-  console.log(result);
-  res.json(result);
+  try {
+    console.log("IN DELETE");
+    const result = await Todo.findByIdAndDelete(req.params.id);
+    console.log(result);
+    res.json(result);
+  } catch (error) {
+    console.error("Error deleting todo:", error);
+    res.status(500).json({ error: "Failed to delete todo" });
+  }
 });
 
 app.get("/todo/complete/:id", async (req, res) => {
-  console.log("in complete");
-  const todo = await Todo.findById(req.params.id);
-  todo.complete = !todo.complete;
-  todo.save();
-  res.json(todo);
+  try {
+    console.log("in complete");
+    const todo = await Todo.findById(req.params.id);
+    if (!todo) {
+      return res.status(404).json({ error: "Todo not found" });
+    }
+    todo.complete = !todo.complete;
+    await todo.save();
+    res.json(todo);
+  } catch (error) {
+    console.error("Error completing todo:", error);
+    res.status(500).json({ error: "Failed to update todo" });
+  }
 });
+// Global error handler middleware - must be before static file serving
+app.use((err, req, res, next) => {
+  console.error("Unhandled error:", err);
+  res.status(err.status || 500).json({ 
+    error: err.message || "Internal server error" 
+  });
+});
+
 // Serve static files from React app in production (optional - for combined deployment)
 if (process.env.NODE_ENV === "production") {
   const path = require("path");
